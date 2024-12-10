@@ -1,7 +1,7 @@
-FastAPI
-pandas 
+numpy
+pandas
 wordcloud
-sikit-learn
+scikit-learn
 matplotlib
 seaborn
-ast
+FastAPI 
