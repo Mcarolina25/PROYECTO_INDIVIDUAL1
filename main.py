@@ -46,7 +46,7 @@ def cantidad_filmaciones_dia(dia: str):
 def score_titulo(titulo_de_la_filmacion: str):
     pelicula = movies_df[movies_df['title'].str.lower() == titulo_de_la_filmacion.lower()]
     if not pelicula.empty:
-        return f"La película {titulo_de_la_filmacion} fue estrenada en el año {pelicula['release_year'].values[0]} con un score/popularidad de {pelicula['popularity'].values[0]}"
+        return f"La película {titulo_de_la_filmacion} fue estrenada en el año {pelicula['release_year'].values[0]} con un score de popularidad de {pelicula['popularity'].values[0]}"
     raise HTTPException(status_code=404, detail="Película no encontrada")
 @app.get("/votos_titulo/{titulo_de_la_filmacion}")
 def votos_titulo(titulo_de_la_filmacion: str):
@@ -58,12 +58,22 @@ def votos_titulo(titulo_de_la_filmacion: str):
     raise HTTPException(status_code=404, detail="Película no encontrada")
 @app.get("/get_actor/{nombre_actor}")
 def get_actor(nombre_actor: str):
+    # Verificar que credits_df no esté vacío
+    if credits_df.empty:
+        raise HTTPException(status_code=500, detail="Datos de películas no disponibles")
+
+    # Filtrar las películas del actor
     actor_movies = credits_df[credits_df['cast_names'].str.contains(nombre_actor, na=False)]
+    
     if not actor_movies.empty:
         total_peliculas = actor_movies.shape[0]
         total_retorno = actor_movies['return'].sum()
         promedio_retorno = total_retorno / total_peliculas if total_peliculas > 0 else 0
-        return f"El actor {nombre_actor} ha participado de {total_peliculas} cantidad de filmaciones, el mismo ha conseguido un retorno de {total_retorno} con un promedio de {promedio_retorno} por filmación"
+        return {
+            "mensaje": f"El actor {nombre_actor} ha participado de {total_peliculas} filmaciones, "
+                       f"con un retorno total de {total_retorno} y un promedio de {promedio_retorno} por filmación."
+        }
+    
     raise HTTPException(status_code=404, detail="Actor no encontrado")
 @app.get("/get_director/{nombre_director}")
 def get_director(nombre_director: str):
@@ -84,14 +94,12 @@ def get_director(nombre_director: str):
 def recomendacion(titulo: str):
     if titulo not in movies_df['title'].values:
         raise HTTPException(status_code=404, detail="Película no encontrada")
-    count_vectorizer = CountVectorizer()
-    count_matrix = count_vectorizer.fit_transform(movies_df['title'])
-    cosine_sim = cosine_similarity(count_matrix)
+    
     idx = movies_df.index[movies_df['title'] == titulo].tolist()[0]
     sim_scores = list(enumerate(cosine_sim[idx]))
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
     top_5_indices = [i[0] for i in sim_scores[1:6]]  
     recomendaciones = movies_df['title'].iloc[top_5_indices].tolist()
 
-    return recomendaciones
+    return {"recomendaciones": recomendaciones}
 
