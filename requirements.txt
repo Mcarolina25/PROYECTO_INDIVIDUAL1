@@ -1,7 +1,0 @@
-FastAPI
-pandas 
-wordcloud
-sklearn
-matplotlib
-seaborn
-ast
