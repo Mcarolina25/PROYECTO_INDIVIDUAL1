@@ -3,15 +3,19 @@ import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import CountVectorizer
 app = FastAPI()
+import locale
 
 # Cargar los datasets
 movies_df = pd.read_csv('Dataset_Procesados/processed_movies_dataset.csv')
 credits_df = pd.read_csv('Dataset_Procesados/processed_credits_dataset.csv')
 # Preprocesamiento de datos
 movies_df['release_date'] = pd.to_datetime(movies_df['release_date'])
-movies_df['month'] = movies_df['release_date'].dt.month_name(locale='Spanish')
-movies_df['day'] = movies_df['release_date'].dt.day_name(locale='Spanish')
-
+movies_df['month'] = movies_df['release_date'].dt.month_name()
+movies_df['day'] = movies_df['release_date'].dt.day_name()
+try:
+    locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')  # Español de España
+except locale.Error:
+    locale.setlocale(locale.LC_TIME, 'en_US.UTF-8')  # Fallback a inglés
 @app.get("/")
 def read_root():
     return {"message": "Bienvenido a la API de películas"}
