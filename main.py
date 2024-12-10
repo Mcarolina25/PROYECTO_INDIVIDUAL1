@@ -57,22 +57,17 @@ def votos_titulo(titulo_de_la_filmacion: str):
         return "La película no cumple con el mínimo de 2000 valoraciones."
     raise HTTPException(status_code=404, detail="Película no encontrada")
 @app.get("/get_actor/{nombre_actor}")
-@app.get("/get_actor/{nombre_actor}")
 def get_actor(nombre_actor: str):
     # Verificar que credits_df no esté vacío
     if credits_df.empty:
         raise HTTPException(status_code=500, detail="Datos de películas no disponibles")
-
-    # Verificar que la columna 'cast_names' y 'return' existan
-    if 'cast_names' not in credits_df.columns or 'return' not in credits_df.columns:
-        raise HTTPException(status_code=500, detail="Columnas necesarias no encontradas en los datos.")
 
     # Filtrar las películas del actor
     actor_movies = credits_df[credits_df['cast_names'].str.contains(nombre_actor, na=False)]
     
     if not actor_movies.empty:
         total_peliculas = actor_movies.shape[0]
-        total_retorno = actor_movies['return'].sum()
+        total_retorno = movies_df['return'].sum()
         promedio_retorno = total_retorno / total_peliculas if total_peliculas > 0 else 0
         return {
             "mensaje": f"El actor {nombre_actor} ha participado de {total_peliculas} filmaciones, "
@@ -97,15 +92,8 @@ def get_director(nombre_director: str):
     raise HTTPException(status_code=404, detail="Director no encontrado")
 @app.get("/recomendacion/{titulo}")
 def recomendacion(titulo: str):
-    # Limpiar el DataFrame de valores NaN
-    movies_df.dropna(subset=['title'], inplace=True)
-
     if titulo not in movies_df['title'].values:
         raise HTTPException(status_code=404, detail="Película no encontrada")
-    
-    count_vectorizer = CountVectorizer()
-    count_matrix = count_vectorizer.fit_transform(movies_df['title'])
-    cosine_sim = cosine_similarity(count_matrix)
     
     idx = movies_df.index[movies_df['title'] == titulo].tolist()[0]
     sim_scores = list(enumerate(cosine_sim[idx]))
@@ -114,3 +102,4 @@ def recomendacion(titulo: str):
     recomendaciones = movies_df['title'].iloc[top_5_indices].tolist()
 
     return {"recomendaciones": recomendaciones}
+
