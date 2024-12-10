@@ -1,4 +1,7 @@
 FastAPI
 pandas 
-sklearn.metrics.pairwise 
-sklearn.feature_extraction.text 
+wordcloud
+sklearn
+matplotlib
+seaborn
+ast
