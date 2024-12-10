@@ -90,14 +90,9 @@ def get_director(nombre_director: str):
             })
         return resultados
     raise HTTPException(status_code=404, detail="Director no encontrado")
-# Asegurar que no haya valores nulos en 'title'
-movies_df = movies_df[movies_df['title'].notna()]
-
-# Calcular la matriz de similitud una sola vez
 count_vectorizer = CountVectorizer()
 count_matrix = count_vectorizer.fit_transform(movies_df['title'])
 cosine_sim = cosine_similarity(count_matrix)
-
 @app.get("/recomendacion/{titulo}")
 def recomendacion(titulo: str):
     if titulo not in movies_df['title'].values:
