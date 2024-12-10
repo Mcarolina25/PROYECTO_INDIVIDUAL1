@@ -1,7 +1,7 @@
 FastAPI
 pandas 
 wordcloud
-sklearn
+sikit-learn
 matplotlib
 seaborn
 ast
