@@ -77,17 +77,5 @@ Después de implementar los endpoints requeridos, se desarrolló un sistema de r
 
 ---
 
-## Cómo usar este proyecto
-
-1. Clona este repositorio en tu máquina local.
-2. Asegúrate de tener instaladas las dependencias necesarias.
-3. Ejecuta el código para realizar las transformaciones y análisis.
-4. Despliega la API y prueba los endpoints.
-5. Usa el sistema de recomendación para obtener sugerencias de películas.
-
----
-
-## Autor
-
 **Maria Carolina Blasco**  
 Cohorte: **dataft27**
