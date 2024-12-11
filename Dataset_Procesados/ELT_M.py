@@ -16,6 +16,14 @@ def desanidar_columna(df, columna, key):
         return None
 
     df[columna] = df[columna].apply(obtener_valor)
+# Asegúrate de que la columna 'genres' esté en formato de lista
+movies['genres'] = movies['genres'].apply(ast.literal_eval)
+
+# Extraer el nombre de cada género y crear una nueva columna 'genero'
+movies['genero'] = movies['genres'].apply(lambda x: [genre['name'] for genre in x])
+
+# Si deseas que la nueva columna contenga solo un género (el primero, por ejemplo)
+movies['genero'] = movies['genero'].apply(lambda x: x[0] if x else None)
 
 # Desanidar columnas específicas
 columnas_a_desanidar = ['belongs_to_collection', 'production_companies', 'production_countries', 'spoken_languages']
@@ -33,7 +41,7 @@ movies['release_year'] = movies['release_date'].dt.year
 movies['return'] = movies.apply(lambda x: x['revenue'] / x['budget'] if x['budget'] > 0 else 0, axis=1)
 # Seleccionar solo las columnas necesarias para la API
 columnas_necesarias = ['title', 'release_date', 'release_year', 'revenue', 'budget', 'return', 
-                       'belongs_to_collection', 'production_companies', 'production_countries', 'spoken_languages', 'id','vote_average','vote_count', 'popularity']
+                       'belongs_to_collection', 'production_companies', 'production_countries', 'spoken_languages', 'id','vote_average','vote_count', 'popularity', 'genero']
 movies = movies[columnas_necesarias]
 # Guardar el dataset procesado
 movies.to_csv('Dataset_Procesados/processed_movies_dataset.csv', index=False)
