@@ -66,14 +66,12 @@ Se desarrollaron 6 endpoints obligatorios:
    - La cantidad de películas en las que ha participado.
    - El promedio de retorno (sin incluir directores).
 
-6. **Sistema de recomendación:**  
-   Al ingresar el nombre de una película, recomienda una lista de 5 películas similares.
 
 ---
 
 ## Sistema de recomendación
 
-Después de implementar los endpoints requeridos, se desarrolló un sistema de recomendación. Este sistema permite ingresar el nombre de una película y obtener una lista de 5 películas similares.
+El sistema de recomendación que he desarrollado se basa en un enfoque de filtrado de contenido. Esto significa que las recomendaciones se generan utilizando las características de las películas, en este caso, sus géneros. La función recomendacion recibe un título de película como entrada devuelve las cinco películas más similares, excluyendo la película original.Este enfoque permite a los usuarios recibir recomendaciones personalizadas basadas en los géneros de las películas que les gustan, lo que mejora su experiencia al buscar nuevas películas para ver.
 
 ---
 
