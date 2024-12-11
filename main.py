@@ -106,12 +106,16 @@ movies_df = movies_df[movies_df['title'].notna()]
 movies_df = movies_df[movies_df['genero'].notna()]
 movies_df['genero'] = movies_df['genero'].apply(lambda x: x.strip("[]").replace("'", "").split(", ") if isinstance(x, str) else [])
 
+# Convertir la columna 'title' a tipo 'category' para ahorrar memoria
+movies_df['title'] = movies_df['title'].astype('category')
+
 # Usar MultiLabelBinarizer para crear una matriz de características
 mlb = MultiLabelBinarizer()
 genre_matrix = mlb.fit_transform(movies_df['genero'])
 
-# Calcular la similitud del coseno
-cosine_sim = cosine_similarity(genre_matrix)
+# Calcular la similitud del coseno solo cuando se necesite
+def calcular_similitud(idx):
+    return cosine_similarity(genre_matrix[idx].reshape(1, -1), genre_matrix).flatten()
 
 # Función para recomendar películas
 def recomendacion(titulo):
@@ -121,10 +125,11 @@ def recomendacion(titulo):
         return "Título de película no encontrado."
     idx = idx[0]
     
-    # Obtener las puntuaciones de similitud de la película
-    sim_scores = list(enumerate(cosine_sim[idx]))
+    # Calcular la similitud del coseno solo para la película seleccionada
+    sim_scores = calcular_similitud(idx)
     
-    # Ordenar las películas basadas en la puntuación de similitud
+    # Obtener las puntuaciones de similitud y ordenarlas
+    sim_scores = list(enumerate(sim_scores))
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
     
     # Obtener las 5 películas más similares
@@ -133,4 +138,3 @@ def recomendacion(titulo):
     
     # Devolver las 5 películas similares
     return movies_df['title'].iloc[movie_indices].tolist()
-
