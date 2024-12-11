@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.preprocessing import MultiLabelBinarizer
 app = FastAPI()
 import locale
 
@@ -102,3 +102,36 @@ def get_director(nombre_director: str):
 # Limpiar datos
 movies_df = movies_df[movies_df['title'].notna()]
 
+# 'genero' no tenga valores nulos
+movies_df['genero'] = movies_df['genero'].fillna("[]")  # Rellenar NaN con una lista vacía
+
+# Convertir la columna 'genero' en listas de géneros
+movies_df['genero'] = movies_df['genero'].apply(lambda x: x.strip("[]").replace("'", "").split(", ") if isinstance(x, str) else [])
+
+# Usar MultiLabelBinarizer para crear una matriz de características
+mlb = MultiLabelBinarizer()
+genre_matrix = mlb.fit_transform(movies_df['genero'])
+
+# Calcular la similitud del coseno
+cosine_sim = cosine_similarity(genre_matrix)
+
+# Función para recomendar películas
+def recomendacion(titulo):
+    # Encontrar el índice de la película ingresada
+    idx = movies_df.index[movies_df['title'] == titulo].tolist()
+    if not idx:
+        return "Título de película no encontrado."
+    idx = idx[0]
+    
+    # Obtener las puntuaciones de similitud de la película
+    sim_scores = list(enumerate(cosine_sim[idx]))
+    
+    # Ordenar las películas basadas en la puntuación de similitud
+    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+    
+    # Obtener las 5 películas más similares
+    sim_scores = sim_scores[1:6]  # Ignorar la primera porque es la misma película
+    movie_indices = [i[0] for i in sim_scores]
+    
+    # Devolver las 5 películas similares
+    return movies_df['title'].iloc[movie_indices].tolist()
