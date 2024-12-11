@@ -90,20 +90,4 @@ def get_director(nombre_director: str):
             })
         return resultados
     raise HTTPException(status_code=404, detail="Director no encontrado")
-movies_df = movies_df[movies_df['title'].notna()]
-count_vectorizer = CountVectorizer()
-count_matrix = count_vectorizer.fit_transform(movies_df['title'])
-cosine_sim = cosine_similarity(count_matrix)
-@app.get("/recomendacion/{titulo}")
-def recomendacion(titulo: str):
-    if titulo not in movies_df['title'].values:
-        raise HTTPException(status_code=404, detail="Película no encontrada")
-    
-    idx = movies_df.index[movies_df['title'] == titulo].tolist()[0]
-    sim_scores = list(enumerate(cosine_sim[idx]))
-    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-    top_5_indices = [i[0] for i in sim_scores[1:6]]  
-    recomendaciones = movies_df['title'].iloc[top_5_indices].tolist()
-
-    return {"recomendaciones": recomendaciones}
 
