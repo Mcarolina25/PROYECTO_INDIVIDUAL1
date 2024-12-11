@@ -102,33 +102,3 @@ def get_director(nombre_director: str):
 # Limpiar datos
 movies_df = movies_df[movies_df['title'].notna()]
 
-# Asegúrate de que la columna 'genero' esté en formato de cadena
-movies_df['genero'] = movies_df['genero'].astype(str)
-
-# Crear un vectorizador TF-IDF
-tfidf = TfidfVectorizer(stop_words='english')
-tfidf_matrix = tfidf.fit_transform(movies_df['genero'])
-
-# Calcular la similitud del coseno
-cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
-
-# Función para recomendar películas
-def recomendacion(titulo):
-    # Encontrar el índice de la película ingresada
-    idx = movies_df.index[movies_df['title'] == titulo].tolist()
-    if not idx:
-        return "Título de película no encontrado."
-    idx = idx[0]
-    
-    # Obtener las puntuaciones de similitud de la película
-    sim_scores = list(enumerate(cosine_sim[idx]))
-    
-    # Ordenar las películas basadas en la puntuación de similitud
-    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-    
-    # Obtener las 5 películas más similares
-    sim_scores = sim_scores[1:6]  # Ignorar la primera porque es la misma película
-    movie_indices = [i[0] for i in sim_scores]
-    
-    # Devolver las 5 películas similares
-    return movies_df['title'].iloc[movie_indices].tolist()
