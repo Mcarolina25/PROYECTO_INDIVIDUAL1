@@ -118,6 +118,7 @@ def calcular_similitud(idx):
     return cosine_similarity(genre_matrix[idx].reshape(1, -1), genre_matrix).flatten()
 
 # Función para recomendar películas
+@app.get("/recomendacion/{titulo}")
 def recomendacion(titulo):
     # Encontrar el índice de la película ingresada
     idx = movies_df.index[movies_df['title'] == titulo].tolist()
