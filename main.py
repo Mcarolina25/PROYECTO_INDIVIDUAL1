@@ -102,10 +102,8 @@ def get_director(nombre_director: str):
 # Limpiar datos
 movies_df = movies_df[movies_df['title'].notna()]
 
-# 'genero' no tenga valores nulos
-movies_df['genero'] = movies_df['genero'].fillna("[]")  # Rellenar NaN con una lista vacía
-
-# Convertir la columna 'genero' en listas de géneros
+# Filtrar filas donde 'genero' no es nulo y convertir a listas
+movies_df = movies_df[movies_df['genero'].notna()]
 movies_df['genero'] = movies_df['genero'].apply(lambda x: x.strip("[]").replace("'", "").split(", ") if isinstance(x, str) else [])
 
 # Usar MultiLabelBinarizer para crear una matriz de características
@@ -135,3 +133,4 @@ def recomendacion(titulo):
     
     # Devolver las 5 películas similares
     return movies_df['title'].iloc[movie_indices].tolist()
+
