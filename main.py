@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 app = FastAPI()
 import locale
 
@@ -16,9 +17,11 @@ try:
     locale.setlocale(locale.LC_TIME, 'en_US.UTF-8')  # Cambia a inglés si es necesario
 except locale.Error:
     pass  # Ignora el error si no se puede establecer
+
 @app.get("/")
 def read_root():
     return {"message": "Bienvenido a la API de películas"}
+# ENDPOIN1:
 @app.get("/cantidad_filmaciones_mes/{mes}")
 def cantidad_filmaciones_mes(mes: str):
     mes_num = {
@@ -31,6 +34,7 @@ def cantidad_filmaciones_mes(mes: str):
     
     cantidad = movies_df[movies_df['release_date'].dt.month == mes_num[mes.lower()]].shape[0]
     return {"message": f"{cantidad} películas fueron estrenadas en el mes de {mes}"}
+# ENDPOIT2:
 @app.get("/cantidad_filmaciones_dia/{dia}")
 def cantidad_filmaciones_dia(dia: str):
     dia_num = {
@@ -42,12 +46,14 @@ def cantidad_filmaciones_dia(dia: str):
     
     cantidad = movies_df[movies_df['release_date'].dt.dayofweek == dia_num[dia.lower()]].shape[0]
     return {"message": f"{cantidad} películas fueron estrenadas en los días {dia}"}
+# ENDPOIN3:
 @app.get("/score_titulo/{titulo_de_la_filmacion}")
 def score_titulo(titulo_de_la_filmacion: str):
     pelicula = movies_df[movies_df['title'].str.lower() == titulo_de_la_filmacion.lower()]
     if not pelicula.empty:
         return f"La película {titulo_de_la_filmacion} fue estrenada en el año {pelicula['release_year'].values[0]} con un score de popularidad de {pelicula['popularity'].values[0]}"
     raise HTTPException(status_code=404, detail="Película no encontrada")
+# ENDPOIN4:
 @app.get("/votos_titulo/{titulo_de_la_filmacion}")
 def votos_titulo(titulo_de_la_filmacion: str):
     pelicula = movies_df[movies_df['title'].str.lower() == titulo_de_la_filmacion.lower()]
@@ -56,6 +62,7 @@ def votos_titulo(titulo_de_la_filmacion: str):
             return f"La película {titulo_de_la_filmacion} fue estrenada en el año {pelicula['release_year'].values[0]}. La misma cuenta con un total de {pelicula['vote_count'].values[0]} valoraciones, con un promedio de {pelicula['vote_average'].values[0]}"
         return "La película no cumple con el mínimo de 2000 valoraciones."
     raise HTTPException(status_code=404, detail="Película no encontrada")
+# ENDPOIN5:
 @app.get("/get_actor/{nombre_actor}")
 def get_actor(nombre_actor: str):
     # Verificar que credits_df no esté vacío
@@ -75,6 +82,7 @@ def get_actor(nombre_actor: str):
         }
     
     raise HTTPException(status_code=404, detail="Actor no encontrado")
+# ENDPOIN6:
 @app.get("/get_director/{nombre_director}")
 def get_director(nombre_director: str):
     director_movies = credits_df[credits_df['director_names'].str.lower() == nombre_director.lower()]
@@ -94,27 +102,33 @@ def get_director(nombre_director: str):
 # Limpiar datos
 movies_df = movies_df[movies_df['title'].notna()]
 
-# Crear el CountVectorizer
-count_vectorizer = CountVectorizer()
+# Asegúrate de que la columna 'genero' esté en formato de cadena
+movies_df['genero'] = movies_df['genero'].astype(str)
 
-@app.get("/recomendacion/{titulo}")
-def recomendacion(titulo: str):
-    if titulo not in movies_df['title'].values:
-        raise HTTPException(status_code=404, detail="Película no encontrada")
-    
-    # Obtener el índice de la película
-    idx = movies_df.index[movies_df['title'] == titulo].tolist()[0]
-    
-    # Calcular la matriz de similitud solo para la película solicitada
-    count_matrix = count_vectorizer.fit_transform(movies_df['title'])
-    cosine_sim = cosine_similarity(count_matrix)
+# Crear un vectorizador TF-IDF
+tfidf = TfidfVectorizer(stop_words='english')
+tfidf_matrix = tfidf.fit_transform(movies_df['genero'])
 
-    # Obtener las puntuaciones de similitud
+# Calcular la similitud del coseno
+cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
+
+# Función para recomendar películas
+def recomendacion(titulo):
+    # Encontrar el índice de la película ingresada
+    idx = movies_df.index[movies_df['title'] == titulo].tolist()
+    if not idx:
+        return "Título de película no encontrado."
+    idx = idx[0]
+    
+    # Obtener las puntuaciones de similitud de la película
     sim_scores = list(enumerate(cosine_sim[idx]))
+    
+    # Ordenar las películas basadas en la puntuación de similitud
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
     
-    # Obtener las 5 mejores recomendaciones
-    top_5_indices = [i[0] for i in sim_scores[1:6]]  
-    recomendaciones = movies_df['title'].iloc[top_5_indices].tolist()
-
-    return {"recomendaciones": recomendaciones}
+    # Obtener las 5 películas más similares
+    sim_scores = sim_scores[1:6]  # Ignorar la primera porque es la misma película
+    movie_indices = [i[0] for i in sim_scores]
+    
+    # Devolver las 5 películas similares
+    return movies_df['title'].iloc[movie_indices].tolist()
