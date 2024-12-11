@@ -90,6 +90,7 @@ def get_director(nombre_director: str):
             })
         return resultados
     raise HTTPException(status_code=404, detail="Director no encontrado")
+movies_df = movies_df[movies_df['title'].notna()]
 count_vectorizer = CountVectorizer()
 count_matrix = count_vectorizer.fit_transform(movies_df['title'])
 cosine_sim = cosine_similarity(count_matrix)
